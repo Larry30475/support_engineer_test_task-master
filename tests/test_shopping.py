@@ -19,10 +19,14 @@ def test_shopping(driver):
     max_i = 0
     for product_from_list in products_list:
         try:
-            review = product_from_list.find_element_by_xpath(".//span[@class='a-size-base']")
-            review_text = review.text
-            if max_review_product < float(review_text):
-                max_review_product = float(review_text)
+            review = product_from_list.find_element_by_xpath(".//span[@class='a-size-base s-underline-text']")
+            review_text = review.text[1:-1]
+            review_str_arr = review_text.split(",")
+            review_text_parsed = ""
+            for rev in review_str_arr:
+                review_text_parsed += rev
+            if max_review_product < int(review_text_parsed):
+                max_review_product = int(review_text_parsed)
                 max_i = products_list.index(product_from_list)
         except:
             review_text = "N/A"
@@ -51,16 +55,23 @@ def test_shopping(driver):
         soup = BeautifulSoup(driver.page_source, "html.parser")
         products_list = soup.find_all('li', class_="sku-item")
         for products in products_list:
-            review = products.find('p', class_="visually-hidden")
-            review_str_arr = review.text.split(" ")
-            review_str = review_str_arr[1]
-            if review_str != "Yet":
-                if max_review_product < float(review_str):
-                    max_review_product = float(review_str)
+            review = products.find('span', class_="c-reviews")
+            if review.text != "Not Yet Reviewed":
+                review_text = review.text[1:-1]
+                review_str_arr = review_text.split(",")
+                review_text_parsed = ""
+                for rev in review_str_arr:
+                    review_text_parsed += rev
+                if max_review_product < int(review_text_parsed):
+                    max_review_product = int(review_text_parsed)
                     max_i = products_list.index(products)
-        bestbuy_price_unparsed = products_list[max_i].find('span', class_="sr-only").text
-        bestbuy_price_str_arr = bestbuy_price_unparsed.split(" ")
-        bestbuy_price = float(bestbuy_price_str_arr[len(bestbuy_price_str_arr) - 1][1:])
+        bestbuy_price_div_tag = products_list[max_i].find('div', class_='priceView-hero-price priceView-customer-price')
+        bestbuy_price_unparsed = bestbuy_price_div_tag.find('span', {'aria-hidden': 'true'})
+        bestbuy_price_whole_arr = bestbuy_price_unparsed.text.split(",")
+        bestbuy_price_whole_parsed = ""
+        for price in bestbuy_price_whole_arr:
+            bestbuy_price_whole_parsed += price
+        bestbuy_price = float(bestbuy_price_whole_parsed[1:])
     except Exception as e:
         print("An error occurred: ", e)
     driver.quit()
